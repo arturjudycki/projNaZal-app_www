@@ -5,3 +5,5 @@ Zalogowany użytkownik ma możliwość zgłoszenia swojej kandydatury na każdy 
 Moderator akceptuje/odrzuca zgłoszenia.
 
 # Schemat DB
+
+![](skateDB.png)
