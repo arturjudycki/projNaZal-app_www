@@ -2,38 +2,21 @@ from django.contrib import admin
 
 # Register your models here.
 
-from django.db import models
-from django.contrib.auth.models import User as AuthUser
+from django.contrib import admin
 
-class Competition(models.Model):
-    city = models.CharField(max_length=45)
-    street = models.CharField(max_length=45)
-    date = models.DateField()
-    description = models.CharField(max_length=255)
+# Register your models here.
+from .models import Competition, User, Registration
 
-class Registration(models.Model):
+class CompetitionAdmin(admin.ModelAdmin):
+    list_display = ('city', 'street', 'date', 'description')
+    list_filter = ('city', 'date')
 
-    class RegistrationStatus(models.TextChoices):
-        Oczekujace = 'SEND'
-        Zaakceptowane = 'OK'
-        Odrzucone = 'NOT'
+class RegistrationAdmin(admin.ModelAdmin):
+    list_display = ['status', 'id_competition', 'id_user']
+    list_filter = ['status', 'id_competition']
 
-    status = models.CharField(max_length=4, choices=RegistrationStatus.choices, default=RegistrationStatus.Oczekujace)
-    id_competition = models.ForeignKey(Competition, related_name='registration', null=False, blank=False, on_delete=models.DO_NOTHING)
-    id_user = models.ForeignKey(AuthUser, related_name='registration', null=False, blank=False, on_delete=models.DO_NOTHING)
+admin.site.register(User)
+admin.site.register(Competition, CompetitionAdmin)
+admin.site.register(Registration, RegistrationAdmin)
 
-class User(models.Model):
-
-    class GenderUser(models.TextChoices):
-        Kobieta = "K"
-        Mezczyzna = "M"
-
-    class StanceUser(models.TextChoices):
-        Goofy = "G"
-        Regular = "R"
-
-    age = models.IntegerField()
-    gender = models.CharField(max_length=1, choices=GenderUser.choices)
-    stance = models.CharField(max_length=1, choices=StanceUser.choices)
-    user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, null=True)
 
