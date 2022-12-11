@@ -2,4 +2,4 @@
 
 # Schemat DB
 
-![](skateDB.png)
+![](skate_db.png)
