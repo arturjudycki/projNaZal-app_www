@@ -27,7 +27,7 @@ class User_detail(models.Model):
     user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.user.first_name + " " + self.user.last_name +  ", Jeździ: " + self.stance
+        return self.user.first_name + " " + self.user.last_name
 
 class Registration(models.Model):
 

@@ -1,13 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User as AuthUser
 from .models import User_detail, Competition, Registration
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth.password_validation import validate_password
+from datetime import datetime
 
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
-        validators=[UniqueValidator(queryset=AuthUser.objects.all())]
+        # validators=[UniqueValidator(queryset=AuthUser.objects.all())]
     )
 
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
@@ -21,6 +22,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             'last_name': {'required': True}
         }
         read_only_fields = ['id']
+        validators = [UniqueTogetherValidator(queryset=AuthUser.objects.all(),fields=['username', 'email'])]
+
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -52,6 +55,21 @@ class CompetitionSerializer(serializers.ModelSerializer):
         model = Competition
         fields = ['id', 'city', 'street', 'date', 'description']
         read_only_fields = ['id']
+
+    def validate_city(self, value):
+
+        if not value.istitle():
+            raise serializers.ValidationError(
+                "Miasto musi zaczynać się z wielkiej litery",
+            )
+        return value
+
+    def validate_date(self, value):
+        if value < datetime.now():
+            raise serializers.ValidationError(
+                "Data nie może być z przeszłości.",
+            )
+        return value
 
 class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
