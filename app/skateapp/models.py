@@ -21,10 +21,13 @@ class User(models.Model):
         Goofy = "G"
         Regular = "R"
 
-    age = models.IntegerField()
-    gender = models.CharField(max_length=1, choices=GenderUser.choices)
-    stance = models.CharField(max_length=1, choices=StanceUser.choices)
+    age = models.IntegerField(null=True)
+    gender = models.CharField(max_length=1, choices=GenderUser.choices, null=True)
+    stance = models.CharField(max_length=1, choices=StanceUser.choices, null=True)
     user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return self.user.username
 
 class Registration(models.Model):
 
