@@ -11,23 +11,23 @@ class Competition(models.Model):
     date = models.DateField()
     description = models.CharField(max_length=255)
 
-class User(models.Model):
+class User_detail(models.Model):
 
     class GenderUser(models.TextChoices):
         Kobieta = "K"
-        Mezczyzna = "M"
+        Mężczyzna = "M"
 
     class StanceUser(models.TextChoices):
-        Goofy = "G"
-        Regular = "R"
+        Goofy = "Goofy"
+        Regular = "Regular"
 
     age = models.IntegerField(null=True)
     gender = models.CharField(max_length=1, choices=GenderUser.choices, null=True)
-    stance = models.CharField(max_length=1, choices=StanceUser.choices, null=True)
+    stance = models.CharField(max_length=7, choices=StanceUser.choices, null=True)
     user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.user.username
+        return self.user.first_name + " " + self.user.last_name +  ", Jeździ: " + self.stance
 
 class Registration(models.Model):
 

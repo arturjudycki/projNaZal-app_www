@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User as AuthUser
-from .models import User
+from .models import User_detail, Competition, Registration
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
@@ -15,11 +15,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AuthUser
-        fields = ('username', 'password', 'password2', 'email')
-        # extra_kwargs = {
-        #     'first_name': {'required': True},
-        #     'last_name': {'required': True}
-        # }
+        fields = ('id', 'username', 'password', 'password2', 'email', 'first_name', 'last_name')
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True}
+        }
+        read_only_fields = ['id']
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -31,16 +32,35 @@ class RegisterSerializer(serializers.ModelSerializer):
         user_auth = AuthUser.objects.create(
             username=validated_data['username'],
             email=validated_data['email'],
-            # first_name=validated_data['first_name'],
-            # last_name=validated_data['last_name']
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
         )
 
         user_auth.set_password(validated_data['password'])
 
-        user_skateapp = User.objects.create(
+        user_skateapp = User_detail.objects.create(
             user=user_auth
         )
 
-        # user_skateapp.save()
+        user_auth.save()
+        user_skateapp.save()
 
         return user_auth
+
+class CompetitionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Competition
+        fields = ['id', 'city', 'street', 'date', 'description']
+        read_only_fields = ['id']
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Registration
+        fields = ['id', 'status', 'id_competition', 'id_user']
+        read_only_fields = ['id']
+
+class User_detail_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = User_detail
+        fields = ['id', 'age', 'gender', 'stance', 'user']
+        read_only_fields = ['id']
