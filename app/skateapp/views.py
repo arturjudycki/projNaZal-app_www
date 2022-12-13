@@ -3,12 +3,121 @@ from django.shortcuts import render
 # Create your views here.
 
 from django.contrib.auth.models import User as AuthUser
-from rest_framework.permissions import AllowAny
-from .serializers import RegisterSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from .serializers import *
+from .models import *
 from rest_framework import generics
 
+from rest_framework.authtoken.models import Token
+
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
+from rest_framework.response import Response
+from rest_framework import status
 
 class RegisterView(generics.CreateAPIView):
     queryset = AuthUser.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
+
+for user in AuthUser.objects.all():
+    Token.objects.get_or_create(user=user)
+
+
+# ****** Competition *******
+
+
+@api_view(['GET'])
+def competitions_list(request):
+    if request.method == 'GET':
+        competitions = Competition.objects.all()
+        serializer = CompetitionSerializer(competitions, many=True)
+        return Response(serializer.data)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def competitions_add(request):
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You dont have permission to create that.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'POST':
+        serializer = CompetitionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+@api_view(['GET'])
+def competitions_detail(request, pk):
+    try:
+        competition = Competition.objects.get(pk=pk)
+    except Competition.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = CompetitionSerializer(competition)
+        return Response(serializer.data)
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def competitions_update(request, pk):
+    try:
+        competition = Competition.objects.get(pk=pk)
+    except Competition.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You dont have permission to update that.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'PUT':
+        serializer = CompetitionSerializer(competition, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def competitions_delete(request, pk):
+    try:
+        competition = Competition.objects.get(pk=pk)
+    except Competition.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You dont have permission to delete that.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'DELETE':
+        competition.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ****** User Details *******
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def user_details_add(request,username):
+    try:
+        queryset = AuthUser.objects.get(username=username)
+        competition = User_detail.objects.get(user=queryset.id)
+    except User_detail.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.user.is_superuser:
+        return Response({'response': 'You dont need to create that, cause you are an admin, not a skateboarder!'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'PUT':
+        serializer = User_detail_Serializer(competition, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# ****** Registration *******
+
+

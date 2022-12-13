@@ -3,7 +3,7 @@ from django.contrib.auth.models import User as AuthUser
 from .models import User_detail, Competition, Registration
 from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth.password_validation import validate_password
-from datetime import datetime
+import datetime
 
 class RegisterSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -65,7 +65,7 @@ class CompetitionSerializer(serializers.ModelSerializer):
         return value
 
     def validate_date(self, value):
-        if value < datetime.now():
+        if value < datetime.date.today():
             raise serializers.ValidationError(
                 "Data nie może być z przeszłości.",
             )
