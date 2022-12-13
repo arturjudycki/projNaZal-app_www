@@ -16,6 +16,9 @@ class Competition(models.Model):
     date = models.DateField()
     description = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.city + ", " + self.street
+
 class User_detail(models.Model):
 
     class GenderUser(models.TextChoices):
@@ -42,8 +45,9 @@ class Registration(models.Model):
         Odrzucone = 'NOT'
 
     status = models.CharField(max_length=4, choices=RegistrationStatus.choices, default=RegistrationStatus.Oczekujace)
-    id_competition = models.ForeignKey(Competition, related_name='registration', null=False, blank=False, on_delete=models.DO_NOTHING)
-    id_user = models.ForeignKey(AuthUser, related_name='registration', null=False, blank=False, on_delete=models.DO_NOTHING)
+    id_competition = models.ForeignKey(Competition, related_name='registration', null=True, blank=True, on_delete=models.DO_NOTHING)
+    id_user = models.ForeignKey(AuthUser, related_name='registration', null=True, blank=True, on_delete=models.DO_NOTHING)
+
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_auth_token(sender, instance=None, created=False, **kwargs):
