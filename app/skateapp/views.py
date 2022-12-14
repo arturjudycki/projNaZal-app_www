@@ -123,7 +123,39 @@ def user_details_add(request,username):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def registrations_list(request,username):
+def registrations_list_of_all_users(request):
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You cant see registrations of all users!'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'GET':
+        registrations = Registration.objects.all()
+        serializer = RegistrationSerializer(registrations, many=True)
+        return Response(serializer.data)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def registrations_list_by_status(request, state):
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You cant see registrations of all users!'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    # if status != 'SEND' or status != 'OK' or status != 'NOT':
+    #     return Response({'response': 'There is no status like that!'},
+    #                     status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    if request.method == 'GET':
+        registrations = Registration.objects.all().filter(status=state)
+        serializer = RegistrationSerializer(registrations, many=True)
+        return Response(serializer.data)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def registrations_list(request, username):
 
     if username != request.user.username and not request.user.is_superuser:
         return Response({'response': 'You cant view registrations of another user!'},
@@ -185,3 +217,23 @@ def registrations_detail(request, username, pk):
         serializer = RegistrationSerializer(registration)
         return Response(serializer.data)
 
+@api_view(['PATCH'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def registrations_change_status(request, pk):
+
+    if not request.user.is_superuser:
+        return Response({'response': 'You cant change status of any registration!'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    try:
+        registration = Registration.objects.get(pk=pk)
+    except Registration.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        serializer = RegistrationSerializer(registration, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
