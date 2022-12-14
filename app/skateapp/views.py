@@ -101,18 +101,22 @@ def competitions_delete(request, pk):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def user_details_add(request,username):
+def user_details_add(request, username):
+
+    if request.user.is_superuser:
+        return Response({'response': 'You dont need to create that, cause you are admin, not a skateboarder!'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    elif username != request.user.username:
+        return Response({'response': 'You cant add user details of another user!'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
     try:
         queryset = AuthUser.objects.get(username=username)
-        competition = User_detail.objects.get(user=queryset.id)
+        user_details = User_detail.objects.get(user=queryset.id)
     except User_detail.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.user.is_superuser:
-        return Response({'response': 'You dont need to create that, cause you are an admin, not a skateboarder!'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
     if request.method == 'PUT':
-        serializer = User_detail_Serializer(competition, data=request.data)
+        serializer = User_detail_Serializer(user_details, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -152,29 +156,10 @@ def registrations_list_by_status(request, state):
         serializer = RegistrationSerializer(registrations, many=True)
         return Response(serializer.data)
 
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def registrations_list(request, username):
-
-    if username != request.user.username and not request.user.is_superuser:
-        return Response({'response': 'You cant view registrations of another user!'},
-                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    try:
-        queryset = AuthUser.objects.get(username=username)
-        registrations = Registration.objects.all().filter(id_user=queryset.id)
-    except AuthUser.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = RegistrationSerializer(registrations, many=True)
-        return Response(serializer.data)
-
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def registrations_add(request,username):
+def registrations_add(request, username):
 
     if request.user.is_superuser:
         return Response({'response': 'You dont need to create that, cause you are admin, not a skateboarder!'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -198,6 +183,24 @@ def registrations_add(request,username):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors)
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def registrations_list(request, username):
+
+    if username != request.user.username and not request.user.is_superuser:
+        return Response({'response': 'You cant view registrations of another user!'},
+                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    try:
+        queryset = AuthUser.objects.get(username=username)
+        registrations = Registration.objects.all().filter(id_user=queryset.id)
+    except AuthUser.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        serializer = RegistrationSerializer(registrations, many=True)
+        return Response(serializer.data)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication, TokenAuthentication])
